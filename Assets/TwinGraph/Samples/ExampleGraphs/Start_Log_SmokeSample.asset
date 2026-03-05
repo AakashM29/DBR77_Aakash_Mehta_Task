@@ -18,12 +18,56 @@ MonoBehaviour:
     - id: start
       type: Start
       parameters: []
+    - id: create_primitive
+      type: CreatePrimitive
+      parameters:
+      - key: shape
+        value: Cube
+      - key: objectKey
+        value: DemoCube
+      - key: position
+        value: 0,0.5,0
+      - key: rotation
+        value: 0,0,0
+      - key: scale
+        value: 1,1,1
+    - id: delay
+      type: Delay
+      parameters:
+      - key: seconds
+        value: "1.0"
+    - id: set_transform
+      type: SetTransform
+      parameters:
+      - key: objectKey
+        value: DemoCube
+      - key: applyPosition
+        value: "true"
+      - key: position
+        value: 1.5,0.5,0
+      - key: applyRotation
+        value: "true"
+      - key: rotation
+        value: 0,30,0
+      - key: applyScale
+        value: "true"
+      - key: scale
+        value: 1.25,1.25,1.25
     - id: log
       type: Log
       parameters:
       - key: message
-        value: "[TwinGraph] Smoke sample graph data is valid."
+        value: "[TwinGraph] Object workflow sample executed."
     links:
     - fromNodeId: start
+      fromPort: Next
+      toNodeId: create_primitive
+    - fromNodeId: create_primitive
+      fromPort: Next
+      toNodeId: delay
+    - fromNodeId: delay
+      fromPort: Next
+      toNodeId: set_transform
+    - fromNodeId: set_transform
       fromPort: Next
       toNodeId: log

@@ -19,7 +19,11 @@ namespace TwinGraph.Runtime.Nodes
                 return;
             }
 
-            // Step 2 runner core only. Executors are registered in the next step.
+            Register(new StartNodeExecutor());
+            Register(new CreatePrimitiveNodeExecutor());
+            Register(new DelayNodeExecutor());
+            Register(new SetTransformNodeExecutor());
+            Register(new LogNodeExecutor());
             defaultsRegistered = true;
         }
 

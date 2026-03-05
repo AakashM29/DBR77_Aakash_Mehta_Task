@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using TwinGraph.Runtime.Nodes;
 using UnityEngine;
@@ -27,6 +28,8 @@ namespace TwinGraph.Runtime.Graph
             StringComparer.Ordinal
         );
 
+        private Coroutine activeRun;
+
         private void Awake()
         {
             NodeRegistry.EnsureDefaultsRegistered();
@@ -40,14 +43,35 @@ namespace TwinGraph.Runtime.Graph
             }
         }
 
+        private void OnDisable()
+        {
+            if (activeRun != null)
+            {
+                StopCoroutine(activeRun);
+                activeRun = null;
+            }
+        }
+
         [ContextMenu("Run Graph")]
         public void RunGraph()
+        {
+            if (activeRun != null)
+            {
+                StopCoroutine(activeRun);
+                activeRun = null;
+            }
+
+            activeRun = StartCoroutine(RunGraphRoutine());
+        }
+
+        private IEnumerator RunGraphRoutine()
         {
             var graphData = graphAsset != null ? graphAsset.graph : null;
             if (graphData == null)
             {
                 Debug.LogWarning("[TwinGraph] GraphRunner has no GraphAsset assigned.", this);
-                return;
+                activeRun = null;
+                yield break;
             }
 
             graphData.EnsureInitialized();
@@ -57,7 +81,8 @@ namespace TwinGraph.Runtime.Graph
             if (startNode == null)
             {
                 Debug.LogWarning("[TwinGraph] GraphRunner found no Start node.", this);
-                return;
+                activeRun = null;
+                yield break;
             }
 
             var context = new ExecutionContext(transform);
@@ -72,7 +97,8 @@ namespace TwinGraph.Runtime.Graph
                         $"[TwinGraph] No executor registered for node type '{executedNode.type}'.",
                         this
                     );
-                    return;
+                    activeRun = null;
+                    yield break;
                 }
 
                 if (verboseLogging)
@@ -86,7 +112,21 @@ namespace TwinGraph.Runtime.Graph
                 var result = executor.Execute(executedNode, context);
                 if (result.ShouldStop)
                 {
-                    return;
+                    activeRun = null;
+                    yield break;
+                }
+
+                if (result.WaitSeconds > 0f)
+                {
+                    if (verboseLogging)
+                    {
+                        Debug.Log(
+                            $"[TwinGraph] Waiting {result.WaitSeconds:0.###} second(s) after node '{executedNode.id}'.",
+                            this
+                        );
+                    }
+
+                    yield return new WaitForSeconds(result.WaitSeconds);
                 }
 
                 var nextPort = string.IsNullOrWhiteSpace(result.NextPort)
@@ -102,7 +142,8 @@ namespace TwinGraph.Runtime.Graph
                         );
                     }
 
-                    return;
+                    activeRun = null;
+                    yield break;
                 }
             }
 
@@ -110,6 +151,8 @@ namespace TwinGraph.Runtime.Graph
                 $"[TwinGraph] Reached maxSteps ({maxSteps}). Execution stopped safely.",
                 this
             );
+            activeRun = null;
+            yield break;
         }
 
         private void BuildRouting(GraphData graphData)
