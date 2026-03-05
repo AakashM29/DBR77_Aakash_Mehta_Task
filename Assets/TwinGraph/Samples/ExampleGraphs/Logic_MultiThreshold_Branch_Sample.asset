@@ -1,0 +1,153 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 307cad0eb6a2a436ab9af77aaeb706b3, type: 3}
+  m_Name: Logic_MultiThreshold_Branch_Sample
+  m_EditorClassIdentifier: Assembly-CSharp::TwinGraph.Runtime.Graph.GraphAsset
+  graph:
+    version: 0.1.0
+    nodes:
+    - id: start
+      type: Start
+      parameters: []
+    - id: set_score
+      type: SetVar
+      parameters:
+      - key: varName
+        value: score
+      - key: valueType
+        value: int
+      - key: value
+        value: 4
+    - id: set_bonus
+      type: SetVar
+      parameters:
+      - key: varName
+        value: bonus
+      - key: valueType
+        value: int
+      - key: value
+        value: 3
+    - id: add_total
+      type: Add
+      parameters:
+      - key: a
+        value: $score
+      - key: b
+        value: $bonus
+      - key: outVar
+        value: total
+    - id: compare_high
+      type: Compare
+      parameters:
+      - key: left
+        value: $total
+      - key: op
+        value: '>='
+      - key: right
+        value: 8
+    - id: compare_mid
+      type: Compare
+      parameters:
+      - key: left
+        value: $total
+      - key: op
+        value: '>='
+      - key: right
+        value: 5
+    - id: create_high
+      type: CreatePrimitive
+      parameters:
+      - key: shape
+        value: Cylinder
+      - key: objectKey
+        value: HighCylinder
+      - key: position
+        value: -2,1,0
+      - key: rotation
+        value: 0,0,0
+      - key: scale
+        value: 1,2,1
+    - id: log_high
+      type: Log
+      parameters:
+      - key: message
+        value: '[TwinGraph] High branch executed (total >= 8).'
+    - id: create_mid
+      type: CreatePrimitive
+      parameters:
+      - key: shape
+        value: Cube
+      - key: objectKey
+        value: MidCube
+      - key: position
+        value: 0,0.5,0
+      - key: rotation
+        value: 0,0,0
+      - key: scale
+        value: 1.2,1.2,1.2
+    - id: log_mid
+      type: Log
+      parameters:
+      - key: message
+        value: '[TwinGraph] Medium branch executed (5 <= total < 8).'
+    - id: create_low
+      type: CreatePrimitive
+      parameters:
+      - key: shape
+        value: Sphere
+      - key: objectKey
+        value: LowSphere
+      - key: position
+        value: 2,0.5,0
+      - key: rotation
+        value: 0,0,0
+      - key: scale
+        value: 1,1,1
+    - id: log_low
+      type: Log
+      parameters:
+      - key: message
+        value: '[TwinGraph] Low branch executed (total < 5).'
+    links:
+    - fromNodeId: start
+      fromPort: Next
+      toNodeId: set_score
+    - fromNodeId: set_score
+      fromPort: Next
+      toNodeId: set_bonus
+    - fromNodeId: set_bonus
+      fromPort: Next
+      toNodeId: add_total
+    - fromNodeId: add_total
+      fromPort: Next
+      toNodeId: compare_high
+    - fromNodeId: compare_high
+      fromPort: True
+      toNodeId: create_high
+    - fromNodeId: create_high
+      fromPort: Next
+      toNodeId: log_high
+    - fromNodeId: compare_high
+      fromPort: False
+      toNodeId: compare_mid
+    - fromNodeId: compare_mid
+      fromPort: True
+      toNodeId: create_mid
+    - fromNodeId: create_mid
+      fromPort: Next
+      toNodeId: log_mid
+    - fromNodeId: compare_mid
+      fromPort: False
+      toNodeId: create_low
+    - fromNodeId: create_low
+      fromPort: Next
+      toNodeId: log_low
