@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using TwinGraph.Runtime.Nodes;
+using TwinGraph.Runtime.Serialization;
 using UnityEngine;
 
 namespace TwinGraph.Runtime.Graph
@@ -20,6 +21,9 @@ namespace TwinGraph.Runtime.Graph
         [SerializeField]
         private bool verboseLogging = true;
 
+        [SerializeField]
+        private bool validateGraphBeforeRun = true;
+
         private readonly Dictionary<string, NodeData> nodesById = new Dictionary<string, NodeData>(
             StringComparer.Ordinal
         );
@@ -27,6 +31,9 @@ namespace TwinGraph.Runtime.Graph
         private readonly Dictionary<string, string> routingByPort = new Dictionary<string, string>(
             StringComparer.Ordinal
         );
+
+        private readonly Dictionary<string, HashSet<string>> outgoingPortsByNode =
+            new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
 
         private Coroutine activeRun;
 
@@ -75,6 +82,13 @@ namespace TwinGraph.Runtime.Graph
             }
 
             graphData.EnsureInitialized();
+            if (validateGraphBeforeRun && !GraphValidator.Validate(graphData, out var validationErrors))
+            {
+                Debug.LogError(BuildValidationErrorMessage(validationErrors), this);
+                activeRun = null;
+                yield break;
+            }
+
             BuildRouting(graphData);
             var startNode = FindStartNode();
 
@@ -134,6 +148,17 @@ namespace TwinGraph.Runtime.Graph
                     : result.NextPort;
                 if (!TryGetNextNode(executedNode.id, nextPort, out currentNode))
                 {
+                    if (
+                        outgoingPortsByNode.TryGetValue(executedNode.id, out var availablePorts)
+                        && availablePorts.Count > 0
+                    )
+                    {
+                        Debug.LogWarning(
+                            $"[TwinGraph] No link from node '{executedNode.id}' on port '{nextPort}'. Available ports: {string.Join(", ", availablePorts)}.",
+                            this
+                        );
+                    }
+
                     if (verboseLogging)
                     {
                         Debug.Log(
@@ -159,6 +184,7 @@ namespace TwinGraph.Runtime.Graph
         {
             nodesById.Clear();
             routingByPort.Clear();
+            outgoingPortsByNode.Clear();
 
             if (graphData.nodes != null)
             {
@@ -192,6 +218,14 @@ namespace TwinGraph.Runtime.Graph
                         ? "Next"
                         : link.fromPort;
                     routingByPort[BuildRouteKey(link.fromNodeId, fromPort)] = link.toNodeId;
+
+                    if (!outgoingPortsByNode.TryGetValue(link.fromNodeId, out var ports))
+                    {
+                        ports = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                        outgoingPortsByNode[link.fromNodeId] = ports;
+                    }
+
+                    ports.Add(fromPort);
                 }
             }
 
@@ -235,6 +269,28 @@ namespace TwinGraph.Runtime.Graph
         private static string BuildRouteKey(string nodeId, string fromPort)
         {
             return nodeId + "::" + fromPort;
+        }
+
+        private static string BuildValidationErrorMessage(List<string> errors)
+        {
+            if (errors == null || errors.Count == 0)
+            {
+                return "[TwinGraph] Graph validation failed with unknown error.";
+            }
+
+            var maxLines = Mathf.Min(errors.Count, 12);
+            var lines = new List<string>(maxLines + 2) { "[TwinGraph] Graph validation failed:" };
+            for (var i = 0; i < maxLines; i++)
+            {
+                lines.Add("- " + errors[i]);
+            }
+
+            if (errors.Count > maxLines)
+            {
+                lines.Add($"- ...and {errors.Count - maxLines} more issue(s).");
+            }
+
+            return string.Join("\n", lines);
         }
     }
 }

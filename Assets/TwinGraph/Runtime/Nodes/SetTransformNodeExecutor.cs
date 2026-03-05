@@ -37,29 +37,73 @@ namespace TwinGraph.Runtime.Nodes
 
             if (applyPosition)
             {
+                if (!HasNonEmptyParam(node, "position"))
+                {
+                    Debug.LogWarning(
+                        $"[TwinGraph] SetTransform node '{node.id}' has applyPosition=true but no 'position' parameter."
+                    );
+                }
+
                 target.transform.localPosition = NodeValueParsers.ParseVector3(
-                    node.GetParam("position", "0,0,0"),
+                    node.GetParam("position", string.Empty),
                     target.transform.localPosition
                 );
             }
 
             if (applyRotation)
             {
+                if (!HasNonEmptyParam(node, "rotation"))
+                {
+                    Debug.LogWarning(
+                        $"[TwinGraph] SetTransform node '{node.id}' has applyRotation=true but no 'rotation' parameter."
+                    );
+                }
+
                 target.transform.localEulerAngles = NodeValueParsers.ParseVector3(
-                    node.GetParam("rotation", "0,0,0"),
+                    node.GetParam("rotation", string.Empty),
                     target.transform.localEulerAngles
                 );
             }
 
             if (applyScale)
             {
+                if (!HasNonEmptyParam(node, "scale"))
+                {
+                    Debug.LogWarning(
+                        $"[TwinGraph] SetTransform node '{node.id}' has applyScale=true but no 'scale' parameter."
+                    );
+                }
+
                 target.transform.localScale = NodeValueParsers.ParseVector3(
-                    node.GetParam("scale", "1,1,1"),
+                    node.GetParam("scale", string.Empty),
                     target.transform.localScale
                 );
             }
 
             return NodeResult.Next("Next");
+        }
+
+        private static bool HasNonEmptyParam(NodeData node, string key)
+        {
+            if (node.parameters == null)
+            {
+                return false;
+            }
+
+            for (var i = 0; i < node.parameters.Count; i++)
+            {
+                var parameter = node.parameters[i];
+                if (
+                    parameter != null
+                    && string.Equals(parameter.key, key, System.StringComparison.OrdinalIgnoreCase)
+                    && !string.IsNullOrWhiteSpace(parameter.value)
+                )
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }
