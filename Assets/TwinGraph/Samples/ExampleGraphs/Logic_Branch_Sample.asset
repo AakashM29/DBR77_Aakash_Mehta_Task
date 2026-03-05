@@ -1,0 +1,117 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 307cad0eb6a2a436ab9af77aaeb706b3, type: 3}
+  m_Name: Logic_Branch_Sample
+  m_EditorClassIdentifier: Assembly-CSharp::TwinGraph.Runtime.Graph.GraphAsset
+  graph:
+    version: 0.1.0
+    nodes:
+    - id: start
+      type: Start
+      parameters: []
+    - id: set_score
+      type: SetVar
+      parameters:
+      - key: varName
+        value: score
+      - key: valueType
+        value: int
+      - key: value
+        value: 3
+    - id: set_bonus
+      type: SetVar
+      parameters:
+      - key: varName
+        value: bonus
+      - key: valueType
+        value: int
+      - key: value
+        value: 3
+    - id: add_total
+      type: Add
+      parameters:
+      - key: a
+        value: $score
+      - key: b
+        value: $bonus
+      - key: outVar
+        value: total
+    - id: compare_total
+      type: Compare
+      parameters:
+      - key: left
+        value: $total
+      - key: op
+        value: '>='
+      - key: right
+        value: 8
+    - id: create_true
+      type: CreatePrimitive
+      parameters:
+      - key: shape
+        value: Cube
+      - key: objectKey
+        value: TrueCube
+      - key: position
+        value: -1.25,0.5,0
+      - key: rotation
+        value: 0,0,0
+      - key: scale
+        value: 1,1,1
+    - id: log_true
+      type: Log
+      parameters:
+      - key: message
+        value: '[TwinGraph] True branch executed (total >= 8).'
+    - id: create_false
+      type: CreatePrimitive
+      parameters:
+      - key: shape
+        value: Sphere
+      - key: objectKey
+        value: FalseSphere
+      - key: position
+        value: 1.25,0.5,0
+      - key: rotation
+        value: 0,0,0
+      - key: scale
+        value: 1,1,1
+    - id: log_false
+      type: Log
+      parameters:
+      - key: message
+        value: '[TwinGraph] False branch executed (total < 8).'
+    links:
+    - fromNodeId: start
+      fromPort: Next
+      toNodeId: set_score
+    - fromNodeId: set_score
+      fromPort: Next
+      toNodeId: set_bonus
+    - fromNodeId: set_bonus
+      fromPort: Next
+      toNodeId: add_total
+    - fromNodeId: add_total
+      fromPort: Next
+      toNodeId: compare_total
+    - fromNodeId: compare_total
+      fromPort: True
+      toNodeId: create_true
+    - fromNodeId: create_true
+      fromPort: Next
+      toNodeId: log_true
+    - fromNodeId: compare_total
+      fromPort: False
+      toNodeId: create_false
+    - fromNodeId: create_false
+      fromPort: Next
+      toNodeId: log_false

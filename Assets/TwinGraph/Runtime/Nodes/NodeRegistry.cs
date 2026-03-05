@@ -23,6 +23,9 @@ namespace TwinGraph.Runtime.Nodes
             Register(new CreatePrimitiveNodeExecutor());
             Register(new DelayNodeExecutor());
             Register(new SetTransformNodeExecutor());
+            Register(new SetVarNodeExecutor());
+            Register(new AddNodeExecutor());
+            Register(new CompareNodeExecutor());
             Register(new LogNodeExecutor());
             defaultsRegistered = true;
         }
