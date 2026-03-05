@@ -1,6 +1,6 @@
 # DBR77_Aakash_Mehta_Task
 
-Unity 6000.3.2f1 take home task with a data driven function block graph runtime for creating and manipulating objects with logic branching and JSON export import
+Unity 6000.3.2f1 take-home task implementing a data-driven function-block graph runtime for creating and manipulating scene objects, with branching logic and JSON import/export.
 
 ## What is implemented
 
